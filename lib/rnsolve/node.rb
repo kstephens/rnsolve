@@ -28,57 +28,16 @@ module RNSolve
       end
     end
 
+    class Variable < self
+      def initialize name
+        @name = name
+      end
+      def value! state
+        raise "#{self.inspect} is unbound"
+      end
+    end
+
     class Operation < self
-    end
-
-    module NumericNode
-      def _constant x
-        NumericConstant.new(x)
-      end
-
-      def method_missing sel, *args, &blk
-        $stderr.puts "  # #{sel}, #{args.inspect}"
-        if cls = NumericOperation::MAP[sel] and cls = cls[:cls]
-          $stderr.puts "  #   => #{cls}.new(*#{args.inspect})"
-          cls.new(*args)
-        else
-          super
-        end
-      end
-    end
-
-    class NumericConstant < Constant
-      include NumericNode
-    end
-
-    class NumericOperation < Operation
-      include NumericNode
-      MAP = { }
-      expr =
-        [
-        [ :Add, :+ ],
-        [ :Sub, :- ],
-        [ :Div, :/ ],
-        [ :Mul, :* ],
-        #  [ :Neg, :-@, :- ],
-      ].map do | ( cls, op, sel ) |
-        sel ||= op
-        <<"END"
-        class #{cls}
-          def initialize a, b = nil
-            @a = _coerce(a)
-            @b = _coerce(b) if b
-          end
-          def value! state
-            state.value(@a) #{sel} state.value(@b)
-          end
-        end
-        MAP[#{op.inspect}] = { :cls => #{cls}, :op => #{op.inspect}, :sel => #{sel.inspect} }
-END
-      end * "\n"
-        $stderr.puts expr
-        eval(expr)
-        pp MAP
     end
 
   end

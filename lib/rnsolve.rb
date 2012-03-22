@@ -5,3 +5,6 @@ module Rnsolve
 end
 
 require 'rnsolve/node'
+require 'rnsolve/state'
+require 'rnsolve/numeric_node'
+
