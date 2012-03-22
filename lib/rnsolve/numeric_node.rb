@@ -17,6 +17,16 @@ module RNSolve
           super
         end
       end
+
+      # Integer-preserving sqrt().
+      def sqrt x
+        return x if x.zero?
+        v = Math.sqrt(x)
+        if Integer === x and (vi = v.to_i) and vi * vi == x
+          v = vi
+        end
+        [ - v, v ]
+      end
     end
 
     class NumericConstant < Constant
@@ -49,6 +59,10 @@ module RNSolve
           "(#{@a} #{op_name} #{@b})".freeze
       end
 
+      def node_to_s s
+        "(#{s.node_to_s(@a)} #{op_name} #{s.node_to_s(@b)})"
+      end
+
       MAP = { }
       expr =
         [
@@ -56,7 +70,7 @@ module RNSolve
         [ :Sub, :- ],
         [ :Mul, :* ],
         [ :Div, :/ ],
-        #  [ :Neg, :-@, :- ],
+        [ :Neg, :-@, :- ],
       ].map do | ( cls, op, sel ) |
         sel ||= op
         <<"END"
@@ -73,6 +87,14 @@ END
       eval(expr)
       # pp MAP
 
+      class Neg
+        def value! state
+          - state.value(@a)
+        end
+        def inverse! s, dst, value, other = nil
+          - value
+        end
+      end
       class Add
         def inverse! s, dst, value, other = nil
           if other == nil # value = dst + dst => dst = value / 2
@@ -90,8 +112,7 @@ END
       class Mul
         def inverse! s, dst, value, other = nil
           if other == nil # value = dst * dst => dst = sqrt(value)
-            v = Math.sqrt(value)
-            [ - v , v ]
+            sqrt(value)
           else
             value / other
           end

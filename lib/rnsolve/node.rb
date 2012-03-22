@@ -39,6 +39,10 @@ module RNSolve
       Constant.new(x)
     end
 
+    def node_to_s s
+      to_s
+    end
+
     class Constant < self
       def initialize value
         @value = value

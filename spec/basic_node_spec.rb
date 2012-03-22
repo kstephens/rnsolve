@@ -44,10 +44,33 @@ describe "Basic Node" do
     n = norm2(a, RNSolve::Node::NumericConstant.new(0))
 
     s = RNSolve::Solver.new
+    s.debug = true
+    s.state.debug = true
+    s.set!(n, 14)
+    s.value(x).should == [ -2, 2 ]
+    pp s.stats if s.debug
+    pp s.state.to_h if s.debug
+
+    x = RNSolve::Node::NumericVariable.new(:x)
+    a = [ 1, 2, x ]
+    n = norm2(a, RNSolve::Node::NumericConstant.new(0))
+
+    s = RNSolve::Solver.new
     # s.debug = true
     # s.state.debug = true
     s.set!(n, 14)
-    s.value(n).should == 14
-    s.value(x).should == [ -2, 2 ]
+    s.value(x).should == [ -3, 3 ]
+  end
+
+  it "should error on overconstrained variables" do
+    x = RNSolve::Node::NumericVariable.new(:x)
+    a = [ 1, x, x ]
+    n = norm2(a, RNSolve::Node::NumericConstant.new(0))
+
+    s = RNSolve::Solver.new
+    #s.debug = true
+    #s.state.debug = true
+    s.set!(n, 14)
+    lambda { s.value(x) }.should_raise RNSolve::Error
   end
 end
