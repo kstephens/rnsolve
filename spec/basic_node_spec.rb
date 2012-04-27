@@ -72,6 +72,26 @@ describe "Basic Node" do
     s.debug = true
     # s.state.debug = true
     s.set!(n, 14)
-    s.value(x).should == [ -2, 2 ]
+    lambda { s.value(x) }.should raise_error(RNSolve::Error::UnknownValue)
+  end
+
+  it "should solve for subtraction." do
+    x = RNSolve::Node::NumericVariable.new(:x)
+    y = x - 3
+    s = RNSolve::Solver.new
+    s.debug = true
+    # s.state.debug = true
+    s.set!(y, 16)
+    s.value(x).should == 19
+  end
+
+  it "should solve for division." do
+    x = RNSolve::Node::NumericVariable.new(:x)
+    y = x / 3
+    s = RNSolve::Solver.new
+    s.debug = true
+    # s.state.debug = true
+    s.set!(y, 16)
+    s.value(x).should == 48
   end
 end

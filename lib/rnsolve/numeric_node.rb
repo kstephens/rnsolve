@@ -106,7 +106,12 @@ END
       end # class
       class Sub
         def inverse! s, dst, value, other = nil
-          not_implemented
+          if other == nil # value = dst - dst   =>   dst = ANY?
+            not_implemented
+          else
+            # value = dst - other  =>  dst = value + other
+            value + other
+          end
         end
       end # class
       class Mul
@@ -120,7 +125,14 @@ END
       end # class
       class Div
         def inverse! s, dst, value, other = nil
-          not_implemented
+          if other == nil # value = dst / dst  =>  dst != 0
+            not_implemented
+          else
+            # value = dst / other
+            #  =>
+            # value * other = dst, where other != 0
+            value * other
+          end
         end
       end # class
     end
