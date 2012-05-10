@@ -66,6 +66,9 @@ module RNSolve
     end
 
     class Variable < self
+      class << self
+        alias :[] :new
+      end
       def initialize name
         @name = name
       end
@@ -79,7 +82,9 @@ module RNSolve
         @to_s ||=
           "#{@name}".freeze
       end
-
+      def inspect
+        "#{self.class.name}[#{@name.inspect}]"
+      end
     end
 
     class Operation < self
