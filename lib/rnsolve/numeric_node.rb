@@ -44,7 +44,7 @@ module RNSolve
         @values
       end
       def == x
-        self.class === x and values == x.values
+        self.class === x and (object_id == x.object_id or values == x.values)
       end
       def <=> x
         values <=> x.values
