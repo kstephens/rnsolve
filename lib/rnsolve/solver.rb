@@ -94,7 +94,7 @@ module RNSolve
         dep_v = @state.value(dep)
         other_map = { }
         other = dep.subnodes.select{|sn| sn != node}.map{|sn| other_map[sn] = @state.value(sn)}
-        $stderr.puts "    solve #{node_to_s(node)} using inverse of #{dep_v} = #{dep}, where #{other_map} " if @debug
+        $stderr.puts "    solve #{node_to_s(node)} using inverse of #{dep_v} = #{dep}, where #{other_map.inspect} " if @debug
         v = dep.inverse!(@state, node, dep_v, *other)
         $stderr.puts "    solve #{node_to_s(node)} = #{v}" if @debug
         @state.set!(node, v)

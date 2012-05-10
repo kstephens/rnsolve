@@ -44,6 +44,9 @@ module RNSolve
     end
 
     class Constant < self
+      class << self
+        alias :[] :new
+      end
       def initialize value
         @value = value
       end
@@ -56,6 +59,9 @@ module RNSolve
       def to_s
         @to_s ||=
           "#{@value}".freeze
+      end
+      def inspect
+        "#{self.class.name}[#{@value.inspect}]"
       end
     end
 
