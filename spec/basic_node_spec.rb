@@ -47,7 +47,7 @@ describe "Basic Node" do
     #s.debug = true
     #s.state.debug = true
     s.set!(n, 14)
-    s.value(x).should == [ -2, 2 ]
+    s.value(x).should == RNSolve::Node::NumericSet[ -2, 2 ]
     pp s.stats if s.debug
     pp s.state.to_h if s.debug
 
@@ -59,7 +59,7 @@ describe "Basic Node" do
     # s.debug = true
     # s.state.debug = true
     s.set!(n, 14)
-    s.value(x).should == [ -3, 3 ]
+    s.value(x).should == RNSolve::Node::NumericSet[-3, 3]
   end
 
   it "should error on overconstrained variables" do

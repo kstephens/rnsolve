@@ -25,8 +25,34 @@ module RNSolve
         if Integer === x and (vi = v.to_i) and vi * vi == x
           v = vi
         end
-        [ - v, v ]
+        NumericSet[ - v, v ]
       end
+    end
+
+    class NumericSet < self
+      include NumericNode
+      class << self
+        alias :[] :new
+      end
+      def initialize *values
+        super()
+        @values = values
+        @values.sort!
+        @values.freeze
+      end
+      def values
+        @values
+      end
+      def == x
+        self.class === x and values == x.values
+      end
+      def <=> x
+        values <=> x.values
+      end
+      def inspect
+        "#{self.class.name}[#{@values * ", "}]"
+      end
+      alias :to_s :inspect
     end
 
     class NumericConstant < Constant
