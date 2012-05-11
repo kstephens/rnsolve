@@ -12,6 +12,14 @@ describe "Basic Node" do
     # pp n
   end
 
+  it "can simplify constant expressions" do
+    a = RNSolve::Node::NumericConstant[1]
+    b = RNSolve::Node::NumericConstant[2]
+    e = a + b
+    e.should be_a(RNSolve::Node::NumericConstant)
+    e.value.should == 3
+  end
+
   it "evaluate nodes" do
     a = [ 1, 2, 3 ]
     n = norm2(a, RNSolve::Node::NumericConstant.new(0))

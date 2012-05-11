@@ -50,6 +50,7 @@ module RNSolve
       def initialize value
         @value = value
       end
+      def value; @value; end
       def value! state
         @value
       end

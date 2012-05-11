@@ -4,7 +4,7 @@ module RNSolve
   class Node
     module NumericNode
       def _constant x
-        NumericConstant.new(x)
+        NumericConstant[x]
       end
 
       def method_missing sel, *args, &blk
@@ -12,7 +12,7 @@ module RNSolve
         if cls = NumericOperation::MAP[sel] and cls = cls[:cls]
           # $stderr.puts "  #   => #{cls}"
           # $stderr.puts "   #{caller * "\n  "}"
-          cls.new(self, *args)
+          cls[self, *args]
         else
           super
         end
@@ -65,6 +65,17 @@ module RNSolve
 
     class NumericOperation < Operation
       include NumericNode
+      def self.[] *args
+        op = new(*args)
+        # $stderr.puts "  op.subnodes = #{op.subnodes.inspect}"
+        if op.subnodes.all? { | n | NumericConstant === n }
+          s = State.new
+          v = op.value!(s)
+          op = NumericConstant[v]
+        end
+        op
+      end
+
       def initialize a, b = nil
         # $stderr.puts "  # #{self.class}.new(#{a.inspect}, #{b.inspect}) : #{self.class.ancestors.inspect}"
         @a = _coerce(a).add_dependent!(self)
