@@ -12,6 +12,15 @@ module RNSolve
     end
 
     def set! node, value
+      unless node.simplified?
+        $stderr.puts "    simplify   #{node_to_s(node)}" if @debug
+        node = node.simplify
+        $stderr.puts "    simplified #{node_to_s(node)}" if @debug
+        node.add_dependents!
+      end
+      if @debug
+        $stderr.puts "\n#### set! #{node_to_s(node)} = #{value}"
+      end
       @state.set! node, value
     end
 

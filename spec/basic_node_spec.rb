@@ -16,8 +16,16 @@ describe "Basic Node" do
     a = RNSolve::Node::NumericConstant[1]
     b = RNSolve::Node::NumericConstant[2]
     e = a + b
+    e = e.simplify
     e.should be_a(RNSolve::Node::NumericConstant)
     e.value.should == 3
+  end
+
+  it "can simplify additive terms" do
+    x = RNSolve::Node::NumericVariable.new(:x)
+    y = x * 2 + x / 3 + 12
+    s = y.simplify
+    s.to_s.should == "((7/3 * x) + 12)"
   end
 
   it "evaluate nodes" do
@@ -52,7 +60,7 @@ describe "Basic Node" do
     n = norm2(a, RNSolve::Node::NumericConstant.new(0))
 
     s = RNSolve::Solver.new
-    #s.debug = true
+    s.debug = true
     #s.state.debug = true
     s.set!(n, 14)
     s.value(x).should == RNSolve::Node::NumericSet[ -2, 2 ]
@@ -101,5 +109,24 @@ describe "Basic Node" do
     # s.state.debug = true
     s.set!(y, 16)
     s.value(x).should == 48
+  end
+
+  it "should solve basic equations." do
+    x = RNSolve::Node::NumericVariable.new(:x)
+    y = x * 2 + x / 3 + 12
+
+    state = RNSolve::State.new
+    state.debug = true
+    state.clear!
+    state.set!(x, expected_x = 9)
+    y_expr = state.node_to_s(y)
+    $stderr.puts "  x = #{expected_x}, y = #{y_expr} therefore y = ..."
+    expected_y = state.value(y)
+    $stderr.puts "  y = #{expected_y.inspect}"
+
+    s = RNSolve::Solver.new
+    s.debug = true
+    s.set!(y, expected_y)
+    s.value(x).should == expected_x
   end
 end

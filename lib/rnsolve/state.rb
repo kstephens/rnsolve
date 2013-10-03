@@ -51,7 +51,7 @@ module RNSolve
     def node_to_s x
       case x
       when Node::Variable
-        value?(x) ? "#{x} = #{value(x)}" : x.to_s
+        value?(x) ? "(#{x} = #{value(x)})" : x.to_s
       when Node
         value?(x) ? value(x).to_s : x.node_to_s(self)
       else

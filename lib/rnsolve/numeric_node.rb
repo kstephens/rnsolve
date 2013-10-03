@@ -1,4 +1,5 @@
 require 'pp'
+require 'rational'
 
 module RNSolve
   class Node
@@ -6,6 +7,14 @@ module RNSolve
       def _constant x
         NumericConstant[x]
       end
+
+      def integer?;  false; end
+      def rational?; false; end
+      def real?;     false; end
+      def simplify;    self; end
+      def simplified?; true; end
+      def simplified!; self; end
+      def add_dependents!; end
 
       def method_missing sel, *args, &blk
         # $stderr.puts "  # #{sel}, #{self.inspect}, #{args.inspect}"
@@ -57,6 +66,9 @@ module RNSolve
 
     class NumericConstant < Constant
       include NumericNode
+      def integer?;  Integer === value; end
+      def rational?; Rational === value; end
+      def real?;     Float === value; end
     end
 
     class NumericVariable < Variable
@@ -66,20 +78,44 @@ module RNSolve
     class NumericOperation < Operation
       include NumericNode
       def self.[] *args
+        op = new
+        args.map!{|x| op._coerce(x)}
         op = new(*args)
-        # $stderr.puts "  op.subnodes = #{op.subnodes.inspect}"
-        if op.subnodes.all? { | n | NumericConstant === n }
-          s = State.new
-          v = op.value!(s)
-          op = NumericConstant[v]
-        end
-        op
       end
 
-      def initialize a, b = nil
-        # $stderr.puts "  # #{self.class}.new(#{a.inspect}, #{b.inspect}) : #{self.class.ancestors.inspect}"
-        @a = _coerce(a).add_dependent!(self)
-        @b = _coerce(b).add_dependent!(self) if b
+      def simplify
+        $stderr.puts "  # #{self.class}.simplify(#{@a.inspect}, #{@b.inspect})"
+        @a = @a.simplify if @a
+        @b = @b.simplify if @b
+        # $stderr.puts "  op.subnodes = #{op.subnodes.inspect}"
+        if subnodes.all? { | n | NumericConstant === n }
+          s = State.new
+          v = value!(s)
+          return NumericConstant[v]
+        end
+        s = _simplify
+        if s != self
+          s = s.simplify
+        end
+        s.simplified!
+      end
+      def simplified?; @simplified; end
+      def simplified!; @simplified = true; self; end
+
+      def initialize a = nil, b = nil
+        $stderr.puts "  # #{self.class}.new(#{a.inspect}, #{b.inspect})"
+        @a = a; @b = b
+      end
+
+      def add_dependents!
+        @a.add_dependent!(self) if @a
+        @b.add_dependent!(self) if @b
+        @a.add_dependents! if @a
+        @b.add_dependents! if @b
+      end
+
+      def _simplify
+        self
       end
 
       def subnodes
@@ -132,7 +168,17 @@ END
           - value
         end
       end
+
       class Add
+        def _simplify
+          if Variable === @a and not Variable === @b
+            return Add[@b, @a]
+          end
+          if Mul === @a and Mul === @b and Variable === (v = @a.subnodes[1]) and v == @b.subnodes[1]
+            return Mul[Add[@a.subnodes[0], @b.subnodes[0]], v]
+          end
+          super
+        end
         def inverse! s, dst, value, other = nil
           if other == nil # value = dst + dst => dst = value / 2
             value / 2
@@ -141,7 +187,14 @@ END
           end
         end
       end # class
+
       class Sub
+        def _simplify
+          if Variable === @a and not Variable === @b
+            return Add[Neg[@b], @a]
+          end
+          super
+        end
         def inverse! s, dst, value, other = nil
           if other == nil # value = dst - dst   =>   dst = ANY?
             not_implemented
@@ -151,7 +204,15 @@ END
           end
         end
       end # class
+
       class Mul
+        def _simplify
+          if Variable === @a and not Variable === @b
+            return Mul[@b, @a]
+          end
+          super
+        end
+
         def inverse! s, dst, value, other = nil
           if other == nil # value = dst * dst => dst = sqrt(value)
             sqrt(value)
@@ -160,7 +221,21 @@ END
           end
         end
       end # class
+
       class Div
+        def _simplify
+          # x / 123 = x * (1/123)
+          if Variable === @a and Constant === @b
+            if @b.integer?
+              b = _constant(1 / @b.value.to_r)
+            else
+              b = _constant(1 / @b.value)
+            end
+            return Mul[b, @a]
+          end
+          super
+        end
+
         def inverse! s, dst, value, other = nil
           if other == nil # value = dst / dst  =>  dst != 0
             not_implemented
